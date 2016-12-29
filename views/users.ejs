@@ -1,8 +1,10 @@
 <h1> Users </h1>
 
 <ul>
-    <% users.users.forEach(function(item){  %>
-        <li><%=item.firstName %> <%=item.lastName%>  </li>
-    <%}); %>
+    <% for (var i=0; i<users.length; i++) {%>
+        <li><%= users[i].first_name+" "+users[i].last_name%>
+        <ul><li><%="Date joined: "+ users[i].date_joined             %></li></ul>
+
+    <% } %>
 
 </ul>
