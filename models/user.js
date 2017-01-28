@@ -1,6 +1,4 @@
-/**
- * Created by josh on 1/28/17.
- */
+
 // app/models/user.js
 // load the things we need
 var mongoose = require('mongoose');
