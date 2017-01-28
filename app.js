@@ -1,67 +1,62 @@
-var express = require('express');
-var path = require('path');
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+// server.js
+
+// set up ======================================================================
+// get all the tools we need
+var express  = require('express');
+var app      = express();
+var port     = process.env.PORT || 8080;
 var mongoose = require('mongoose');
-var fs = require('fs');
+var passport = require('passport');
+var flash    = require('connect-flash');
 
-var index = require('./routes/index');
-var users = require('./routes/users');
-var about = require('./routes/about')
-var userProvider = require('./userprovider').userProvider;
+var morgan       = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser   = require('body-parser');
+var session      = require('express-session');
 
-var app = express();
-var jp2a = require( "jp2a" );
+var configDB = require('./config/database.js');
+var jp2a = require("jp2a")
 
-mongoose.connect('mongodb://localhost/mongo');
+// configuration ===============================================================
+mongoose.connect(configDB.url); // connect to our database
 
-var db =mongoose.connection;
-const CFONTS = require('cfonts');
+ require('./config/passport')(passport); // pass passport for configuration
 
-CFONTS.say('ARETE', {
-    font: 'block',        //define the font face
-    align: 'left',        //define text alignment
-    colors: ['white'],    //define all colors
-    background: 'Black',  //define the background color
-    letterSpacing: 1,     //define letter spacing
-    lineHeight: 1,        //define the line height
-    space: true,          //define if the output text should have empty lines on top and on the bottom
-    maxLength: '0'        //define how many character can be on one line
+// set up our express application
+app.use(morgan('dev')); // log every request to the console
+app.use(cookieParser()); // read cookies (needed for auth)
+app.use(bodyParser()); // get information from html forms
+
+app.set('view engine', 'ejs'); // set up ejs for templating
+
+// required for passport
+app.use(session({ secret: 'ilovescotchscotchyscotchscotch' })); // session secret
+app.use(passport.initialize());
+app.use(passport.session()); // persistent login sessions
+app.use(flash()); // use connect-flash for flash messages stored in session
+
+// routes ======================================================================
+require('./routes.js')(app, passport); // load our routes and pass in our app and fully configured passport
+
+// launch ======================================================================
+app.listen(port);
+console.log('Up on port: ' + 3000);
+
+var figlet = require('figlet');
+
+figlet('  Arete', function(err, data) {
+    if (err) {
+        console.log('Something went wrong...');
+        console.dir(err);
+        return;
+    }
+    console.log(data)
 });
 
-jp2a( [ "public/images/asciidiscusthrower.jpg", "--width=50", "--background=light" ],  function( output ){
+jp2a( [ "public/images/discusthrower.jpg", "--width=50", "--background=light" ],  function( output ){
     console.log( output );
 });
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
-
-fs.readdirSync(__dirname + '/models').forEach(function(filename){
-    if (~filename.indexOf('.js')) require(__dirname+ '/models/' + filename)
-})
-
-
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-
-app.use('/', index);
-app.use('/users', users);
-app.use('/about', about);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
 
 // error handler
 app.use(function(err, req, res, next) {
